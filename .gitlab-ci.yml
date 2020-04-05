@@ -1,4 +1,5 @@
 image: node:alpine
+
 pages:
   stage: deploy
   script:
@@ -11,7 +12,3 @@ pages:
     - public
   only:
   - master
-
-Dont forget HOMEPAGE 
-
-“HomePage”: “    “; 
