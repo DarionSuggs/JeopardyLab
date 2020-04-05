@@ -12,5 +12,4 @@ pages:
     - public
   only:
   - master
-  
-"homepage": "https://darionsuggs.gitlab.io/jeopardylab",
+
