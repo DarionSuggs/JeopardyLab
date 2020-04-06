@@ -1,8 +1,14 @@
 import React, { Component } from "react";
-import GameBoard from './GameBoard';
-
-//import our service
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import * as JeopardyActions from '../../actions'
 import JeopardyService from "../../jeopardyService";
+import Display from './display';
+
+const cleanString = (string) => {
+  return string.toUpperCase().replace(/[^0-9a-z]/gi, '')
+}
+
 
 class Jeopardy extends Component {
   //set our initial state and set up our service as this.client on this component
@@ -11,7 +17,8 @@ class Jeopardy extends Component {
     this.client = new JeopardyService();
     this.state = {
       data: {},
-      score: 0
+      score: 0,
+      answer: ''
     };
   }
 
@@ -19,7 +26,8 @@ class Jeopardy extends Component {
   getNewQuestion() {
     return this.client.getQuestion().then(result => {
       this.setState({
-        data: result.data
+        data: result.data,
+        answer: ''
       });
     });
   }
@@ -28,33 +36,52 @@ class Jeopardy extends Component {
   componentDidMount() {
     this.getNewQuestion();
   }
+  handleChange = e => {
+    this.setState({ [e.target.name]: e.target.value });
+  }
 
-  checkAnswer = answer => {
-    if (answer.toUpperCase() === this.state.data.answer.toUpperCase()) {
-      this.setState((state, props) => ({
-        score: state.score + state.data.value
-      }));
-    } else {
-      this.setState((state, props) => ({
-        score: state.score - state.data.value
-      }));
-    }
-
-    this.getNewQuestion();
-  };
+  handleAnswer = e => {
+    e.preventDefault()
+    let score = this.state.score
+    const answer = cleanString(this.state.answer)
+    const solution = cleanString(this.state.data.answer)
+      if (answer === solution){
+        score += this.props.pointValue
+      } else {
+        score -= this.props.pointValue
+      }
+      this.setState({ score, answer: '' })
+      this.props.getQuestion();
+  }
 
   //display the results on the screen
   render() {
     return (
-      <div className="Jeopardy">
-        <GameBoard 
-        data={this.state.data}
+      <div>
+        <Display
+        question={this.props.question}
+        category={this.props.category}
+        pv={this.props.pointValue}
         score={this.state.score}
-        checkAnswer={this.checkAnswer}
+        handleAnswer={this.handleAnswer}
+        handleChange={this.handleChange}
         />
       </div>
     );
   }
 }
 
-export default Jeopardy;
+const mapStateToProps = (state) => ({
+  question: state.question,
+  score: state.score,
+  category: state.category,
+  pointValue: state.pointValue,
+  solution: state.solution,
+  answeredQuestions: state.answeredQuestions
+});
+
+const mapDispatchToProps = (dispatch) => {
+  return bindActionCreators(JeopardyActions, dispatch)
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Jeopardy);
